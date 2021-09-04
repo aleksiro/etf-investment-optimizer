@@ -20,7 +20,7 @@ This project focuses on creating a linear regression calculation for set of pred
 On top of the questions above, this project was a learning journey as my first Google Cloud Platform project with previous experience in Azure and AWS. Project also includes calculations to get the required input values for Nordnet's ETF monthly investment tool.
 
 ## Architecture
-TODO
+![Solution architecture](./architecture.png)
 
 ## Data sources
 - Nordnet ticker data - Fetched on [single ETF's Nordnet page](https://www.nordnet.fi/markkinakatsaus/etf-listat/16309430-i-shares-core-msci) at "Kurssihistoria" -> "Lataa historiallinen data" button. Fetches last 5 years of daily close prices and turnover. This data is monthly manually downloaded from Nordnet site and moved to GCP Cloud Storage.
@@ -31,7 +31,6 @@ TODO
 Currently project doesn't yet have cloud infrastructure templates and requires manually creating resources on GCP console and utilizing code found on this repository.
 
 ## Limitations and incomplete parts:
-- Architecture diagram
 - How to get started done correctly
 - Backtesting code
 - Reporting / visualizations
