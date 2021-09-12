@@ -37,3 +37,4 @@ Publish schema where calculations are performed and outputs are available to rep
 - `pub.NN_KK_MONTHLY_PRICES_WITH_TRENDS` - Monthly (realized) average prices, calculated momentarily trend prices,  current trend line values over time per ETF and user with lower and upper condifence interval values. Used for visualizations in reporting tool 
 - `pub.NN_KK_ETF_MULTIPLIERS` - Based on trend lines and current close prices multipliers and current price differences to use in monthly investments
 - `pub.NN_KK_ETF_CALC_RES_PORTION_AND_SUMS` - Calculated portions and investment sums to input as Nordnet monthly investment inputs per owner and ETF ticker
+- `pub.NN_KK_ETF_PERFORMANCE` - Backtest the performance of optimizing buying sums vs. buying fixed sums for the same period. Displays KPIs for the performances like ROI difference between two strategies

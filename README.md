@@ -32,7 +32,6 @@ Currently project doesn't yet have cloud infrastructure templates and requires m
 
 ## Limitations and incomplete parts:
 - How to get started done correctly
-- Backtesting code
 - Reporting / visualizations
 - Cloud infrastructure templates
 
