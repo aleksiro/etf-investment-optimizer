@@ -1,0 +1,30 @@
+SELECT OWNER
+        , TICKER
+        , ROUND(PRICE_DIFFERENCE, 3)    AS PRICE_DIFFERENCE 
+        , 2 * ((ADJ_PRICE_DIFF - (-1 * CI_MAX)) / (CI_MAX - (-1 * CI_MAX)))     AS MULTIPLIER
+    FROM ( 
+        SELECT ci.OWNER
+            , pri.TICKER
+            , PRICE_DIFFERENCE 
+            , CASE
+                WHEN pri.PRICE_DIFFERENCE >= ci.VALUE   THEN -1 * ci.VALUE
+                WHEN pri.PRICE_DIFFERENCE <= (-1 * ci.VALUE)  THEN ci.VALUE
+                ELSE ROUND(pri.PRICE_DIFFERENCE, 3) * -1
+            END AS ADJ_PRICE_DIFF
+            , ci.VALUE AS CI_MAX
+        FROM (
+            SELECT tlv.TICKER
+                , tlv.CURRENT_PRICE    AS TREND_LINE_PRICE
+                , lp.CLOSE_PRICE       AS LATEST_REALIZED_PRICE
+                , (lp.CLOSE_PRICE - tlv.CURRENT_PRICE) / tlv.CURRENT_PRICE    AS PRICE_DIFFERENCE
+            FROM pub.NN_KK_TREND_LINE_VALUES tlv
+            LEFT JOIN pub.NN_KK_LATEST_PRICE lp
+                ON tlv.TICKER = lp.TICKER
+        ) AS pri
+        CROSS JOIN (
+            SELECT OWNER
+                 , VALUE
+            FROM dw.REF_ETF_PARAMETERS_CURRENT
+            WHERE PARAMETER_NAME = 'CONFIDENCE_INTERVAL'
+        ) AS ci
+    )

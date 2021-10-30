@@ -1,0 +1,19 @@
+[
+  {
+    "mode": "NULLABLE",
+    "name": "OWNER",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "TICKER",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "PORTION",
+    "precision": 3,
+    "scale": 2,
+    "type": "NUMERIC"
+  }
+]

@@ -1,0 +1,98 @@
+SELECT tab.TICKER
+        , COUNT(tab.BOUGHT_SUM_FIX) - 12            AS INVESTMENT_MONTHS
+        --, TRUNC(SUM(tab.BOUGHT_AMOUNT_ADJ))         AS ADJ_STOCK_AMOUNT
+        --, ROUND(SUM(tab.BOUGHT_SUM_ADJ), 2)         AS ADJ_INVESTED_SUM
+        , ROUND(SUM(tab.BOUGHT_SUM_ADJ) / SUM(tab.BOUGHT_AMOUNT_ADJ), 2)                            AS ADJ_AVERAGE_PRICE
+        , ROUND(MAX(lp.CLOSE_PRICE) /  (SUM(tab.BOUGHT_SUM_ADJ) / SUM(tab.BOUGHT_AMOUNT_ADJ)) - 1, 3)   AS ADJ_TOTAL_RETURN
+        , ROUND((MAX(lp.CLOSE_PRICE) /  (SUM(tab.BOUGHT_SUM_ADJ) / SUM(tab.BOUGHT_AMOUNT_ADJ)) - 1) / (COUNT(tab.BOUGHT_SUM_ADJ) - 12) * 12, 3)   AS ADJ_ROI_YEARLY
+    --    , TRUNC(SUM(tab.BOUGHT_AMOUNT_FIX))         AS FIX_STOCK_AMOUNT
+    --    , ROUND(SUM(tab.BOUGHT_SUM_FIX), 2)         AS FIX_INVESTED_SUM
+        , ROUND(SUM(tab.BOUGHT_SUM_FIX) / SUM(tab.BOUGHT_AMOUNT_FIX), 2)                            AS FIX_AVERAGE_PRICE
+        , ROUND(MAX(lp.CLOSE_PRICE) / (SUM(tab.BOUGHT_SUM_FIX) / SUM(tab.BOUGHT_AMOUNT_FIX)) - 1, 3)    AS FIX_TOTAL_RETURN
+        , ROUND((MAX(lp.CLOSE_PRICE) / (SUM(tab.BOUGHT_SUM_FIX) / SUM(tab.BOUGHT_AMOUNT_FIX)) - 1) / (COUNT(tab.BOUGHT_SUM_FIX) - 12) * 12, 3)    AS FIX_ROI_YEARLY 
+    --   , MAX(lp.CLOSE_PRICE)   AS CURRENT_PRICE
+        , ROUND(((MAX(lp.CLOSE_PRICE) /  (SUM(tab.BOUGHT_SUM_ADJ) / SUM(tab.BOUGHT_AMOUNT_ADJ)) - 1) / (COUNT(tab.BOUGHT_SUM_ADJ) - 12) * 12) - ((MAX(lp.CLOSE_PRICE) / (SUM(tab.BOUGHT_SUM_FIX) / SUM(tab.BOUGHT_AMOUNT_FIX)) - 1) / (COUNT(tab.BOUGHT_SUM_FIX) - 12) * 12), 4)    AS ADJ_VS_FIX_YEARLY_DIFFERENCE
+    FROM (
+        SELECT tb.TICKER
+            , AVG_PRICE
+            , ADJ_PRICE_DIFF
+            , (mp.VALUE + mp.VALUE *  MULTIPLIER)    AS TRUE_MULTIPLIER
+            , CASE
+                WHEN ROWNUMBER > 12 THEN FLOOR((mp.VALUE + mp.VALUE *  MULTIPLIER) * ia.AMOUNT * por.PORTION / AVG_PRICE)                 
+                ELSE 0
+            END AS BOUGHT_AMOUNT_ADJ
+            , CASE
+                WHEN ROWNUMBER > 12 THEN FLOOR((mp.VALUE + mp.VALUE *  MULTIPLIER) * ia.AMOUNT * por.PORTION / AVG_PRICE) * AVG_PRICE    
+                ELSE 0
+            END AS BOUGHT_SUM_ADJ
+            , CASE
+                WHEN ROWNUMBER > 12 THEN FLOOR(ia.AMOUNT * por.PORTION / AVG_PRICE)              
+                ELSE 0
+            END AS BOUGHT_AMOUNT_FIX
+            , CASE 
+                WHEN ROWNUMBER > 12 THEN FLOOR(ia.AMOUNT * por.PORTION / AVG_PRICE) * AVG_PRICE  
+                ELSE 0
+            END AS BOUGHT_SUM_FIX
+        FROM (
+            SELECT TICKER
+                , MONTH      
+                , ROW_NUMBER() OVER(PARTITION BY TICKER ORDER BY MONTH ASC)     AS ROWNUMBER
+                , AVG_PRICE
+                , TREND_LINE
+                , ADJ_PRICE_DIFF
+                , 2 * ((ADJ_PRICE_DIFF - (-1 * CI_MAX)) / (CI_MAX - (-1 * CI_MAX)))     AS MULTIPLIER
+            FROM (
+                SELECT TICKER
+                    , MONTH
+                    , AVG_PRICE
+                    , TREND_LINE
+                    , CASE
+                            WHEN PRICE_DIFF_PERC >= ci.VALUE   THEN -1 * ci.VALUE
+                            WHEN PRICE_DIFF_PERC <= (-1 * ci.VALUE)  THEN ci.VALUE
+                            ELSE ROUND(PRICE_DIFF_PERC, 3) * -1
+                        END AS ADJ_PRICE_DIFF
+                        , ci.VALUE AS CI_MAX
+                FROM (
+                    SELECT mpt.TICKER
+                        , mpt.MONTH
+                        , mpt.AVG_PRICE
+                        , mpt.TREND_LINE
+                        , mpt.AVG_PRICE - mpt.TREND_LINE   AS PRICE_DIFF
+                        , (mpt.AVG_PRICE - mpt.TREND_LINE) / mpt.TREND_LINE    AS PRICE_DIFF_PERC
+                    FROM pub.NN_KK_MONTHLY_PRICES_WITH_TRENDS mpt
+                    WHERE OWNER = 'Aleksi'
+                )
+                CROSS JOIN (
+                    SELECT OWNER
+                            , VALUE
+                    FROM dw.REF_ETF_PARAMETERS_CURRENT
+                    WHERE PARAMETER_NAME = 'CONFIDENCE_INTERVAL'
+                        AND OWNER = 'Aleksi'
+                ) AS ci
+            )
+        ) tb
+        LEFT JOIN (
+            SELECT TICKER
+                , PORTION
+            FROM dw.REF_ETF_PORTIONS
+            WHERE OWNER = 'Aleksi'
+        ) AS por
+            ON por.TICKER = tb.TICKER
+        CROSS JOIN (
+            SELECT OWNER
+                    , VALUE
+            FROM dw.REF_ETF_PARAMETERS_CURRENT
+            WHERE PARAMETER_NAME = 'MOVING_PART'
+                AND OWNER = 'Aleksi'
+        ) AS mp
+        CROSS JOIN (
+            SELECT OWNER
+                , VALUE     AS AMOUNT
+            FROM dw.REF_ETF_PARAMETERS_CURRENT
+            WHERE PARAMETER_NAME = 'INVESTMENT_SUM'
+                AND OWNER = 'Aleksi'
+        ) AS ia
+    ) tab
+    LEFT JOIN pub.NN_KK_LATEST_PRICE lp
+        ON tab.TICKER = lp.TICKER
+    GROUP BY tab.TICKER

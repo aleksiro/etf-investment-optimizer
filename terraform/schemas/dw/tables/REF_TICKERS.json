@@ -1,0 +1,39 @@
+[
+  {
+    "mode": "NULLABLE",
+    "name": "TICKER",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "FULL_NAME",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "ISSUER",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "COUNTRY",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "RUNNING_COST",
+    "precision": 4,
+    "scale": 2,
+    "type": "NUMERIC"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "DIVIDENT_POLICY",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "ETF_TYPE",
+    "type": "STRING"
+  }
+]

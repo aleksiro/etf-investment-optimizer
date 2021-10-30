@@ -1,0 +1,24 @@
+[
+  {
+    "mode": "NULLABLE",
+    "name": "OWNER",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "VALID_FROM",
+    "type": "DATE"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "PARAMETER_NAME",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "VALUE",
+    "precision": 10,
+    "scale": 2,
+    "type": "NUMERIC"
+  }
+]

@@ -1,0 +1,22 @@
+SELECT raw.TICKER
+        , raw.MONTH
+        , ROUND(AVG(raw.CLOSE_PRICE), 2) AS AVG_PRICE
+        , ROW_NUMBER() OVER(PARTITION BY raw.TICKER ORDER BY raw.MONTH) AS ROW_NUMBER
+    FROM (
+        SELECT DISTINCT TICKER
+            , FORMAT_DATE('%Y-%m', DATE) AS MONTH
+            , DATE
+            , CLOSE_PRICE
+            , TURNOVER
+        FROM (
+            SELECT MAX(TIMESTAMP_MILLIS(LOAD_TIMESTAMP))    AS LOAD_TIMESTAMP
+                , TICKER
+                , DATE
+                , MAX(CLOSE_PRICE)                         AS CLOSE_PRICE
+                , MAX(TURNOVER)                            AS TURNOVER
+            FROM dw.ETF_DAILY_CLOSE
+            GROUP BY TICKER, DATE
+        )
+    ) raw
+    GROUP BY raw.TICKER, raw.MONTH
+    ORDER BY raw.TICKER, raw.MONTH DESC

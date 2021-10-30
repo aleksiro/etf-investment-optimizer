@@ -1,0 +1,142 @@
+SELECT ci.OWNER
+        , tab.TICKER
+        , tab.MONTH
+        , tab.AVG_PRICE
+        , tab.TREND_LINE
+        , tab.CUR_TREND_LINE
+        , tab.CUR_TREND_LINE * (1 + ci.CONFIDENCE_INTERVAL)    AS UPPER_CI
+        , tab.CUR_TREND_LINE * (1 - ci.CONFIDENCE_INTERVAL)    AS LOWER_CI
+    FROM (    
+        SELECT pri.TICKER
+            , pri.MONTH
+            , pri.AVG_PRICE
+            , ROUND(pri.ROW_NUMBER * mov_lr.SLOPE + mov_lr.INTERCEPT, 2) AS TREND_LINE
+            , pri.ROW_NUMBER * cur_tre.SLOPE + cur_tre.INTERCEPT        AS CUR_TREND_LINE
+        FROM pub.NN_KK_MONTHLY_AVG_PRICES pri
+        LEFT JOIN (
+            SELECT TICKER 
+                , ROW_NUMBER() OVER(PARTITION BY TICKER) AS ROW_NUMBER
+                , SLOPE
+                , MAX_AVG_PRICE_BAR
+                , MAX_AVG_PRICE_BAR - MAX_ROW_NUMBER_BAR * SLOPE AS INTERCEPT
+            FROM (
+                SELECT TICKER 
+                    , SUM((ROW_NUMBER - ROW_NUMBER_BAR) * (AVG_PRICE - AVG_PRICE_BAR)) OVER(ORDER BY ROW_NUMBER ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) 
+                        / IF(SUM((ROW_NUMBER - ROW_NUMBER_BAR) * (ROW_NUMBER - ROW_NUMBER_BAR)) OVER(ORDER BY ROW_NUMBER ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) = 0, 1, SUM((ROW_NUMBER - ROW_NUMBER_BAR) * (ROW_NUMBER - ROW_NUMBER_BAR)) OVER(ORDER BY ROW_NUMBER ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)) AS SLOPE
+                    , MAX(ROW_NUMBER_BAR) OVER(ORDER BY ROW_NUMBER ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS MAX_ROW_NUMBER_BAR
+                    , MAX(AVG_PRICE_BAR) OVER(ORDER BY ROW_NUMBER ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS MAX_AVG_PRICE_BAR
+                FROM (
+                    SELECT TICKER 
+                        , ROW_NUMBER
+                        , AVG(ROW_NUMBER) OVER(ORDER BY ROW_NUMBER ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS ROW_NUMBER_BAR
+                        , AVG_PRICE 
+                        , AVG(AVG_PRICE) OVER(ORDER BY ROW_NUMBER ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS AVG_PRICE_BAR
+                    FROM pub.NN_KK_MONTHLY_AVG_PRICES
+                    WHERE TICKER = 'EUNL'
+                )
+            )
+        ) AS mov_lr
+            ON pri.TICKER = mov_lr.TICKER
+            AND pri.ROW_NUMBER = mov_lr.ROW_NUMBER
+        LEFT JOIN (
+            SELECT TICKER
+                , SLOPE / 100  AS SLOPE
+                , INTERCEPT
+            FROM pub.NN_KK_TREND_LINE_VALUES
+            WHERE TICKER = 'EUNL'
+        ) cur_tre
+            ON pri.TICKER = cur_tre.TICKER
+        WHERE pri.TICKER = 'EUNL'
+
+        UNION ALL 
+
+            SELECT pri.TICKER
+            , pri.MONTH
+            , pri.AVG_PRICE
+            , ROUND(pri.ROW_NUMBER * mov_lr.SLOPE + mov_lr.INTERCEPT, 2) AS TREND_LINE
+            , pri.ROW_NUMBER * cur_tre.SLOPE + cur_tre.INTERCEPT        AS CUR_TREND_LINE
+        FROM pub.NN_KK_MONTHLY_AVG_PRICES pri
+        LEFT JOIN (
+            SELECT TICKER 
+                , ROW_NUMBER() OVER(PARTITION BY TICKER) AS ROW_NUMBER
+                , SLOPE
+                , MAX_AVG_PRICE_BAR
+                , MAX_AVG_PRICE_BAR - MAX_ROW_NUMBER_BAR * SLOPE AS INTERCEPT
+            FROM (
+                SELECT TICKER 
+                    , SUM((ROW_NUMBER - ROW_NUMBER_BAR) * (AVG_PRICE - AVG_PRICE_BAR)) OVER(ORDER BY ROW_NUMBER ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) 
+                        / IF(SUM((ROW_NUMBER - ROW_NUMBER_BAR) * (ROW_NUMBER - ROW_NUMBER_BAR)) OVER(ORDER BY ROW_NUMBER ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) = 0, 1, SUM((ROW_NUMBER - ROW_NUMBER_BAR) * (ROW_NUMBER - ROW_NUMBER_BAR)) OVER(ORDER BY ROW_NUMBER ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)) AS SLOPE
+                    , MAX(ROW_NUMBER_BAR) OVER(ORDER BY ROW_NUMBER ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS MAX_ROW_NUMBER_BAR
+                    , MAX(AVG_PRICE_BAR) OVER(ORDER BY ROW_NUMBER ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS MAX_AVG_PRICE_BAR
+                FROM (
+                    SELECT TICKER 
+                        , ROW_NUMBER
+                        , AVG(ROW_NUMBER) OVER(ORDER BY ROW_NUMBER ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS ROW_NUMBER_BAR
+                        , AVG_PRICE 
+                        , AVG(AVG_PRICE) OVER(ORDER BY ROW_NUMBER ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS AVG_PRICE_BAR
+                    FROM pub.NN_KK_MONTHLY_AVG_PRICES
+                    WHERE TICKER = 'IUSN'
+                )
+            )
+        ) AS mov_lr
+            ON pri.TICKER = mov_lr.TICKER
+            AND pri.ROW_NUMBER = mov_lr.ROW_NUMBER
+        LEFT JOIN (
+            SELECT TICKER
+                , SLOPE / 100  AS SLOPE
+                , INTERCEPT
+            FROM pub.NN_KK_TREND_LINE_VALUES
+            WHERE TICKER = 'IUSN'
+        ) cur_tre
+            ON pri.TICKER = cur_tre.TICKER
+        WHERE pri.TICKER = 'IUSN'
+
+        UNION ALL
+
+            SELECT pri.TICKER
+            , pri.MONTH
+            , pri.AVG_PRICE
+            , ROUND(pri.ROW_NUMBER * mov_lr.SLOPE + mov_lr.INTERCEPT, 2) AS TREND_LINE
+            , pri.ROW_NUMBER * cur_tre.SLOPE + cur_tre.INTERCEPT        AS CUR_TREND_LINE
+        FROM pub.NN_KK_MONTHLY_AVG_PRICES pri
+        LEFT JOIN (
+            SELECT TICKER 
+                , ROW_NUMBER() OVER(PARTITION BY TICKER) AS ROW_NUMBER
+                , SLOPE
+                , MAX_AVG_PRICE_BAR
+                , MAX_AVG_PRICE_BAR - MAX_ROW_NUMBER_BAR * SLOPE AS INTERCEPT
+            FROM (
+                SELECT TICKER 
+                    , SUM((ROW_NUMBER - ROW_NUMBER_BAR) * (AVG_PRICE - AVG_PRICE_BAR)) OVER(ORDER BY ROW_NUMBER ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) 
+                        / IF(SUM((ROW_NUMBER - ROW_NUMBER_BAR) * (ROW_NUMBER - ROW_NUMBER_BAR)) OVER(ORDER BY ROW_NUMBER ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) = 0, 1, SUM((ROW_NUMBER - ROW_NUMBER_BAR) * (ROW_NUMBER - ROW_NUMBER_BAR)) OVER(ORDER BY ROW_NUMBER ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)) AS SLOPE
+                    , MAX(ROW_NUMBER_BAR) OVER(ORDER BY ROW_NUMBER ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS MAX_ROW_NUMBER_BAR
+                    , MAX(AVG_PRICE_BAR) OVER(ORDER BY ROW_NUMBER ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS MAX_AVG_PRICE_BAR
+                FROM (
+                    SELECT TICKER 
+                        , ROW_NUMBER
+                        , AVG(ROW_NUMBER) OVER(ORDER BY ROW_NUMBER ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS ROW_NUMBER_BAR
+                        , AVG_PRICE 
+                        , AVG(AVG_PRICE) OVER(ORDER BY ROW_NUMBER ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS AVG_PRICE_BAR
+                    FROM pub.NN_KK_MONTHLY_AVG_PRICES
+                    WHERE TICKER = 'IS3N'
+                )
+            )
+        ) AS mov_lr
+            ON pri.TICKER = mov_lr.TICKER
+            AND pri.ROW_NUMBER = mov_lr.ROW_NUMBER
+        LEFT JOIN (
+            SELECT TICKER
+                , SLOPE / 100  AS SLOPE
+                , INTERCEPT
+            FROM pub.NN_KK_TREND_LINE_VALUES
+            WHERE TICKER = 'IS3N'
+        ) cur_tre
+            ON pri.TICKER = cur_tre.TICKER
+        WHERE pri.TICKER = 'IS3N'
+    ) tab
+    CROSS JOIN (
+        SELECT OWNER
+             , VALUE AS CONFIDENCE_INTERVAL
+        FROM dw.REF_ETF_PARAMETERS_CURRENT
+        WHERE PARAMETER_NAME = 'CONFIDENCE_INTERVAL'
+    ) ci

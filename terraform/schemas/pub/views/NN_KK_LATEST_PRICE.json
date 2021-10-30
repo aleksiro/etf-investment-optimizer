@@ -1,0 +1,13 @@
+SELECT rnd.TICKER
+        , MAX(ma.LATEST_DATE)   AS LATEST_DATE
+        , MAX(rnd.CLOSE_PRICE)  AS CLOSE_PRICE
+    FROM dw.ETF_DAILY_CLOSE rnd
+    INNER JOIN (
+        SELECT TICKER
+            , MAX(DATE)    AS LATEST_DATE
+        FROM dw.ETF_DAILY_CLOSE
+        GROUP BY TICKER
+    ) ma
+        ON rnd.TICKER = ma.TICKER
+        AND rnd.DATE = ma.LATEST_DATE 
+    GROUP BY TICKER

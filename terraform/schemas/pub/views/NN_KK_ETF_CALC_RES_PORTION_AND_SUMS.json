@@ -1,0 +1,32 @@
+SELECT mltp.OWNER
+        , mltp.TICKER
+        , mltp.PORTION                 AS ORIGINAL_PORTION
+        , ROUND(mltp.MULTIPLIER, 3)    AS MULTIPLIER
+        , ROUND(mltp.UNNORMALIZED_MULTIPLIER / SUM(mltp.UNNORMALIZED_MULTIPLIER) OVER(PARTITION BY mltp.OWNER), 3)   AS PORTION
+        , ROUND(((1 - mltp.MOV_PART) * ins.INVESTMENT_SUM + mltp.MOV_PART * ins.INVESTMENT_SUM * AVG(mltp.MULTIPLIER) OVER(PARTITION BY mltp.OWNER)) *  ( mltp.UNNORMALIZED_MULTIPLIER / SUM(mltp.UNNORMALIZED_MULTIPLIER) OVER(PARTITION BY mltp.OWNER)), 2)  AS INVESTMENT_SUM
+    FROM (
+        SELECT rep.OWNER
+            , rep.TICKER
+            , rep.PORTION
+            , em.MULTIPLIER
+            , ci.MOV_PART
+            , rep.PORTION * (1 - ci.MOV_PART) + rep.PORTION * ci.MOV_PART * em.MULTIPLIER   AS UNNORMALIZED_MULTIPLIER
+        FROM dw.REF_ETF_PORTIONS rep
+        LEFT JOIN pub.NN_KK_ETF_MULTIPLIERS em
+            ON rep.TICKER = em.TICKER
+            AND rep.OWNER = em.OWNER
+        LEFT JOIN (
+            SELECT OWNER
+                 , VALUE AS MOV_PART
+            FROM dw.REF_ETF_PARAMETERS_CURRENT
+            WHERE PARAMETER_NAME = 'MOVING_PART'
+        ) AS ci
+            ON rep.OWNER = ci.OWNER
+    ) mltp
+    LEFT JOIN (
+        SELECT OWNER
+             , VALUE AS INVESTMENT_SUM
+        FROM dw.REF_ETF_PARAMETERS_CURRENT
+        WHERE PARAMETER_NAME = 'INVESTMENT_SUM'
+    ) AS ins
+        ON mltp.OWNER = ins.OWNER

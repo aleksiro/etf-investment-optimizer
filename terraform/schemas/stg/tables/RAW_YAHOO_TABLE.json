@@ -1,0 +1,29 @@
+[
+  {
+    "mode": "NULLABLE",
+    "name": "LOAD_TIMESTAMP",
+    "type": "INTEGER"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "TICKER",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "DATE",
+    "type": "STRING"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "CLOSE_PRICE",
+    "precision": 6,
+    "scale": 2,
+    "type": "NUMERIC"
+  },
+  {
+    "mode": "NULLABLE",
+    "name": "TURNOVER",
+    "type": "INTEGER"
+  }
+]

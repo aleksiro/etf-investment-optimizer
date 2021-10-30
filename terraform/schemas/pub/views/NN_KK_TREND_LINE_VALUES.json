@@ -1,0 +1,93 @@
+SELECT lr.TICKER
+    , ROUND(lr.SLOPE * 100, 4)  AS SLOPE
+    , ROUND((SELECT MAX(ROW_NUMBER) FROM pub.NN_KK_MONTHLY_AVG_PRICES WHERE TICKER = 'EUNL') * lr.SLOPE + lr.INTERCEPT, 3) AS CURRENT_PRICE
+    , ROUND(INTERCEPT, 3)       AS INTERCEPT
+FROM (
+    SELECT TICKER 
+        , ROW_NUMBER() OVER(PARTITION BY TICKER) AS ROW_NUMBER
+        , SLOPE
+        , MAX_AVG_PRICE_BAR
+        , MAX_AVG_PRICE_BAR - MAX_ROW_NUMBER_BAR * SLOPE AS INTERCEPT
+    FROM (
+        SELECT TICKER 
+            , SUM((ROW_NUMBER - ROW_NUMBER_BAR) * (AVG_PRICE - AVG_PRICE_BAR)) 
+                / IF(SUM((ROW_NUMBER - ROW_NUMBER_BAR) * (ROW_NUMBER - ROW_NUMBER_BAR)) = 0, 1, SUM((ROW_NUMBER - ROW_NUMBER_BAR) * (ROW_NUMBER - ROW_NUMBER_BAR)) ) AS SLOPE
+            , MAX(ROW_NUMBER_BAR)  AS MAX_ROW_NUMBER_BAR
+            , MAX(AVG_PRICE_BAR)   AS MAX_AVG_PRICE_BAR
+        FROM (
+            SELECT TICKER 
+                , ROW_NUMBER
+                , AVG(ROW_NUMBER) OVER() AS ROW_NUMBER_BAR
+                , AVG_PRICE 
+                , AVG(AVG_PRICE) OVER() AS AVG_PRICE_BAR
+            FROM pub.NN_KK_MONTHLY_AVG_PRICES
+            WHERE TICKER = 'EUNL'
+        )
+        GROUP BY TICKER
+    )
+    ) AS lr
+    WHERE lr.TICKER = 'EUNL'
+
+    UNION ALL 
+
+    SELECT lr.TICKER
+        , ROUND(lr.SLOPE * 100, 4)  AS SLOPE
+        , ROUND((SELECT MAX(ROW_NUMBER) FROM pub.NN_KK_MONTHLY_AVG_PRICES WHERE TICKER = 'IUSN') * lr.SLOPE + lr.INTERCEPT, 3) AS CURRENT_PRICE
+        , ROUND(INTERCEPT, 3)       AS INTERCEPT
+    FROM (
+        SELECT TICKER 
+            , ROW_NUMBER() OVER(PARTITION BY TICKER) AS ROW_NUMBER
+            , SLOPE
+            , MAX_AVG_PRICE_BAR
+            , MAX_AVG_PRICE_BAR - MAX_ROW_NUMBER_BAR * SLOPE AS INTERCEPT
+        FROM (
+            SELECT TICKER 
+                , SUM((ROW_NUMBER - ROW_NUMBER_BAR) * (AVG_PRICE - AVG_PRICE_BAR)) 
+                    / IF(SUM((ROW_NUMBER - ROW_NUMBER_BAR) * (ROW_NUMBER - ROW_NUMBER_BAR)) = 0, 1, SUM((ROW_NUMBER - ROW_NUMBER_BAR) * (ROW_NUMBER - ROW_NUMBER_BAR)) ) AS SLOPE
+                , MAX(ROW_NUMBER_BAR)  AS MAX_ROW_NUMBER_BAR
+                , MAX(AVG_PRICE_BAR)   AS MAX_AVG_PRICE_BAR
+            FROM (
+                SELECT TICKER 
+                    , ROW_NUMBER
+                    , AVG(ROW_NUMBER) OVER() AS ROW_NUMBER_BAR
+                    , AVG_PRICE 
+                    , AVG(AVG_PRICE) OVER() AS AVG_PRICE_BAR
+                FROM pub.NN_KK_MONTHLY_AVG_PRICES
+                WHERE TICKER = 'IUSN'
+            )
+            GROUP BY TICKER
+        )
+    ) AS lr
+    WHERE lr.TICKER = 'IUSN'
+
+    UNION ALL 
+
+    SELECT lr.TICKER
+        , ROUND(lr.SLOPE * 100, 4)  AS SLOPE
+        , ROUND((SELECT MAX(ROW_NUMBER) FROM pub.NN_KK_MONTHLY_AVG_PRICES WHERE TICKER = 'IS3N') * lr.SLOPE + lr.INTERCEPT, 3) AS CURRENT_PRICE
+        , ROUND(INTERCEPT, 3)       AS INTERCEPT
+    FROM (
+        SELECT TICKER 
+            , ROW_NUMBER() OVER(PARTITION BY TICKER) AS ROW_NUMBER
+            , SLOPE
+            , MAX_AVG_PRICE_BAR
+            , MAX_AVG_PRICE_BAR - MAX_ROW_NUMBER_BAR * SLOPE AS INTERCEPT
+        FROM (
+            SELECT TICKER 
+                , SUM((ROW_NUMBER - ROW_NUMBER_BAR) * (AVG_PRICE - AVG_PRICE_BAR)) 
+                    / IF(SUM((ROW_NUMBER - ROW_NUMBER_BAR) * (ROW_NUMBER - ROW_NUMBER_BAR)) = 0, 1, SUM((ROW_NUMBER - ROW_NUMBER_BAR) * (ROW_NUMBER - ROW_NUMBER_BAR)) ) AS SLOPE
+                , MAX(ROW_NUMBER_BAR)  AS MAX_ROW_NUMBER_BAR
+                , MAX(AVG_PRICE_BAR)   AS MAX_AVG_PRICE_BAR
+            FROM (
+                SELECT TICKER 
+                    , ROW_NUMBER
+                    , AVG(ROW_NUMBER) OVER() AS ROW_NUMBER_BAR
+                    , AVG_PRICE 
+                    , AVG(AVG_PRICE) OVER() AS AVG_PRICE_BAR
+                FROM pub.NN_KK_MONTHLY_AVG_PRICES
+                WHERE TICKER = 'IS3N'
+            )
+            GROUP BY TICKER
+        )
+    ) AS lr
+    WHERE lr.TICKER = 'IS3N'
